@@ -631,12 +631,19 @@
 
         function updateQuote() {
             const quote = getRandomQuote();
-            quoteSection.style.animation = 'none';
-            void quoteSection.offsetWidth;
-            quoteSection.style.animation = 'gentleFade 0.6s ease forwards';
             
-            quoteTextEl.textContent = quote.text;
-            quoteAuthorEl.textContent = quote.author;
+            quoteTextEl.style.opacity = '0';
+            quoteAuthorEl.style.opacity = '0';
+            
+            setTimeout(() => {
+                quoteTextEl.textContent = quote.text;
+                quoteAuthorEl.textContent = quote.author;
+                
+                quoteTextEl.style.transition = 'opacity 0.6s ease';
+                quoteAuthorEl.style.transition = 'opacity 0.6s ease';
+                quoteTextEl.style.opacity = '1';
+                quoteAuthorEl.style.opacity = '1';
+            }, 300);
         }
 
         // 日期时间

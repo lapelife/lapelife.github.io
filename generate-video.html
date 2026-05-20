@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>520 浪漫视频生成</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ffeef8, #e8b4b8, #ff6b9d);
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            background: white;
+            border-radius: 2rem;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(196, 69, 105, 0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            background: linear-gradient(120deg, #c44569, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        canvas {
+            width: 100%;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(196, 69, 105, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 1rem 2rem;
+            border-radius: 3rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b9d, #c44569);
+            color: white;
+            box-shadow: 0 8px 20px rgba(196, 69, 105, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(196, 69, 105, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #c44569;
+            border: 2px solid #ff6b9d;
+        }
+
+        .btn-secondary:hover {
+            background: #ffeef8;
+            transform: translateY(-3px);
+        }
+
+        .info {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.05), rgba(168, 85, 247, 0.05));
+            border-radius: 1rem;
+            border-left: 4px solid #ff6b9d;
+        }
+
+        .info h3 {
+            color: #c44569;
+            margin-bottom: 0.5rem;
+        }
+
+        .info p {
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💕 520 浪漫视频动画</h1>
+        <canvas id="loveCanvas" width="800" height="450"></canvas>
+        
+        <div class="controls">
+            <button class="btn-primary" id="playBtn">▶️ 播放动画</button>
+            <button class="btn-secondary" id="downloadBtn">💾 下载视频</button>
+        </div>
+
+        <div class="info">
+            <h3>💡 使用说明</h3>
+            <p>
+                这是一段精美的520主题动画视频。使用上方按钮可以播放动画预览，
+                或者下载为WebM格式的视频文件。下载的视频可以直接用于网站的video.html页面。
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('loveCanvas');
+        const ctx = canvas.getContext('2d');
+        const playBtn = document.getElementById('playBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let animationId;
+        let startTime;
+        let hearts = [];
+        let particles = [];
+        let isPlaying = false;
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        class Heart {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.size = 15 + Math.random() * 25;
+                this.speedY = -1 - Math.random() * 2;
+                this.speedX = Math.random() * 2 - 1;
+                this.rotation = Math.random() * 360;
+                this.rotationSpeed = Math.random() * 2 - 1;
+                this.opacity = 0.6 + Math.random() * 0.4;
+                this.pulse = 0;
+                this.pulseSpeed = 0.05 + Math.random() * 0.05;
+                this.emoji = ['💕', '💖', '💗', '💝', '❤️', '💘', '💓'][Math.floor(Math.random() * 7)];
+            }
+
+            update() {
+                this.y += this.speedY;
+                this.x += Math.sin(this.y * 0.02) * 0.5 + this.speedX;
+                this.rotation += this.rotationSpeed;
+                this.pulse += this.pulseSpeed;
+
+                if (this.y < -100) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation * Math.PI / 180);
+                ctx.globalAlpha = this.opacity;
+
+                const scale = 1 + Math.sin(this.pulse) * 0.1;
+                ctx.font = `${this.size * scale}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.emoji, 0, 0);
+
+                ctx.restore();
+            }
+        }
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = 2 + Math.random() * 4;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 - 0.25;
+                this.opacity = 0.3 + Math.random() * 0.5;
+                this.life = 0;
+                this.maxLife = 100 + Math.random() * 200;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life++;
+
+                if (this.life > this.maxLife) {
+                    this.reset();
+                }
+
+                this.opacity = Math.sin((this.life / this.maxLife) * Math.PI) * 0.5;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 107, 157, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        function drawBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#ffeef8');
+            gradient.addColorStop(0.5, '#e8b4b8');
+            gradient.addColorStop(1, '#ff6b9d');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function draw520(time) {
+            const progress = (time % 10000) / 10000;
+            const scale = 1 + Math.sin(progress * Math.PI * 2) * 0.1;
+            const opacity = 0.3 + Math.sin(progress * Math.PI * 2) * 0.2;
+
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.scale(scale, scale);
+
+            ctx.font = "bold 120px Arial";
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            ctx.shadowColor = '#c44569';
+            ctx.shadowBlur = 30;
+            
+            const gradient = ctx.createLinearGradient(-100, -60, 100, 60);
+            gradient.addColorStop(0, '#c44569');
+            gradient.addColorStop(0.5, '#ff6b9d');
+            gradient.addColorStop(1, '#a855f7');
+            ctx.fillStyle = gradient;
+            
+            ctx.fillText('520', 0, 0);
+            ctx.restore();
+        }
+
+        function drawLoveText(time) {
+            const messages = [
+                '💕 我爱你',
+                '💖 永远在一起',
+                '💗 你是我的唯一',
+                '💝 520快乐',
+                '❤️ 心心相印',
+                '💘 情有独钟'
+            ];
+
+            const index = Math.floor((time / 2000) % messages.length);
+            const opacity = 0.8 + Math.sin(time / 500) * 0.2;
+
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            ctx.font = "bold 36px Arial";
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const gradient = ctx.createLinearGradient(
+                canvas.width / 2 - 150,
+                canvas.height - 80,
+                canvas.width / 2 + 150,
+                canvas.height - 40
+            );
+            gradient.addColorStop(0, '#c44569');
+            gradient.addColorStop(1, '#a855f7');
+            ctx.fillStyle = gradient;
+
+            ctx.shadowColor = '#ff6b9d';
+            ctx.shadowBlur = 20;
+            ctx.fillText(messages[index], canvas.width / 2, canvas.height - 60);
+            ctx.restore();
+        }
+
+        function drawHeart(time) {
+            const scale = 1 + Math.sin(time / 500) * 0.15;
+            const pulse = Math.sin(time / 300) * 5;
+
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2 - 30);
+            ctx.scale(scale, scale);
+
+            ctx.font = "100px Arial";
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            ctx.shadowColor = '#ff6b9d';
+            ctx.shadowBlur = 40 + pulse;
+            
+            ctx.fillText('❤️', 0, 0);
+            ctx.restore();
+        }
+
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const time = timestamp - startTime;
+
+            drawBackground();
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            hearts.forEach(h => {
+                h.update();
+                h.draw();
+            });
+
+            drawHeart(time);
+            draw520(time);
+            drawLoveText(time);
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        function init() {
+            for (let i = 0; i < 20; i++) {
+                hearts.push(new Heart());
+            }
+
+            for (let i = 0; i < 50; i++) {
+                particles.push(new Particle());
+            }
+
+            if (!isPlaying) {
+                isPlaying = true;
+                playBtn.textContent = '⏸️ 暂停';
+                animate(0);
+            }
+        }
+
+        playBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                cancelAnimationFrame(animationId);
+                isPlaying = false;
+                playBtn.textContent = '▶️ 播放动画';
+            } else {
+                isPlaying = true;
+                playBtn.textContent = '⏸️ 暂停';
+                if (!startTime) startTime = performance.now();
+                animate(performance.now());
+            }
+        });
+
+        downloadBtn.addEventListener('click', async () => {
+            if (!isPlaying) {
+                startTime = 0;
+                animate(0);
+            }
+
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = '⏳ 生成中...';
+
+            const stream = canvas.captureStream(30);
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'video/webm;codecs=vp9'
+            });
+
+            recordedChunks = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, {
+                    type: 'video/webm'
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = '520-love-video.webm';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = '💾 下载视频';
+            };
+
+            mediaRecorder.start();
+            
+            setTimeout(() => {
+                mediaRecorder.stop();
+            }, 10000);
+
+            setTimeout(() => {
+                if (mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            }, 12000);
+        });
+
+        init();
+    </script>
+</body>
+</html>
