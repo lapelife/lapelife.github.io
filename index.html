@@ -546,8 +546,8 @@
             </div>
 
             <!-- 按钮 -->
-            <div class="button-group">
-                <button class="btn btn-primary" id="refreshQuoteBtn">
+            <div class="button-group" style="position: relative; z-index: 100;">
+                <button class="btn btn-primary" id="refreshQuoteBtn" onclick="handleRefreshClick()">
                     🔄 换一句情话
                 </button>
                 <a href="love.html" class="btn btn-secondary">
@@ -704,6 +704,21 @@
 
         // 初始化
         function init() {
+            console.log('初始化开始...');
+            
+            if (!quoteTextEl) {
+                console.error('quoteTextEl 未找到');
+                return;
+            }
+            if (!quoteAuthorEl) {
+                console.error('quoteAuthorEl 未找到');
+                return;
+            }
+            if (!refreshBtn) {
+                console.error('refreshBtn 未找到');
+                return;
+            }
+
             // 随机名言
             const initQuote = getRandomQuote();
             quoteTextEl.textContent = initQuote.text;
@@ -714,11 +729,22 @@
             setInterval(updateDateTime, 1000);
 
             // 刷新名言
-            refreshBtn.addEventListener('click', updateQuote);
+            refreshBtn.addEventListener('click', function(e) {
+                console.log('按钮被点击!');
+                e.preventDefault();
+                updateQuote();
+            });
 
             // 浮动效果
             createFloatingHearts();
             createParticles();
+            
+            console.log('初始化完成!');
+        }
+
+        function handleRefreshClick() {
+            console.log('handleRefreshClick 被调用!');
+            updateQuote();
         }
 
         window.addEventListener('DOMContentLoaded', init);
