@@ -1,1 +1,593 @@
-<!doctype html><html lang=""><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="/favicon.ico"><title>fronted_user</title><script defer="defer" src="/js/chunk-vendors.88346c98.js"></script><script defer="defer" src="/js/app.0ea57cc5.js"></script><link href="/css/chunk-vendors.75403bb8.css" rel="stylesheet"><link href="/css/app.20f489af.css" rel="stylesheet"></head><body><noscript><strong>We're sorry but fronted_user doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id="app"></div></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="简约时光笺 - 实时时钟与每日名言，支持深色模式，适合部署于Gitee Pages">
+    <title>时光小笺 | 灵感和时间</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* CSS 变量 - 亮色主题 (默认) */
+        :root {
+            --bg-gradient-start: #e9f0fc;
+            --bg-gradient-end: #d9e4f5;
+            --card-bg: rgba(255, 255, 255, 0.92);
+            --card-bg-solid: #ffffff;
+            --text-primary: #1e2b3c;
+            --text-secondary: #2c4b66;
+            --accent-color: #4f7d9e;
+            --accent-hover: #3a6280;
+            --border-light: rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 20px 35px -12px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.02);
+            --shadow-hover: 0 25px 40px -16px rgba(0, 0, 0, 0.18);
+            --button-bg: #f0f4fa;
+            --button-text: #2c4b66;
+            --quote-bg: rgba(79, 125, 158, 0.08);
+            --footer-text: #5f7f9a;
+        }
+
+        /* 深色主题变量 */
+        body.dark {
+            --bg-gradient-start: #121826;
+            --bg-gradient-end: #1a2332;
+            --card-bg: rgba(26, 35, 50, 0.92);
+            --card-bg-solid: #1e2a3a;
+            --text-primary: #eef2ff;
+            --text-secondary: #cbd5e6;
+            --accent-color: #7da5c9;
+            --accent-hover: #a0c0dd;
+            --border-light: rgba(255, 255, 255, 0.08);
+            --shadow-sm: 0 20px 35px -12px rgba(0, 0, 0, 0.4);
+            --shadow-hover: 0 25px 40px -16px rgba(0, 0, 0, 0.6);
+            --button-bg: #2d3e54;
+            --button-text: #e0edf9;
+            --quote-bg: rgba(125, 165, 201, 0.12);
+            --footer-text: #8ca3bc;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, 'Roboto', 'Noto Sans', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            margin: 0;
+            backdrop-filter: blur(0px);
+        }
+
+        /* 主卡片 */
+        .card {
+            max-width: 600px;
+            width: 100%;
+            background: var(--card-bg);
+            backdrop-filter: blur(2px);
+            background-color: var(--card-bg-solid);
+            border-radius: 2rem;
+            padding: 2rem 1.8rem 2rem 1.8rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+            transition: transform 0.25s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* 头部区域 (标题 + 主题切换) */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1.8rem;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .title-section h1 {
+            font-size: 1.85rem;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            background: linear-gradient(120deg, var(--text-primary), var(--accent-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-shadow: none;
+        }
+
+        .emoji-icon {
+            font-size: 1.9rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        }
+
+        /* 主题按钮 */
+        .theme-toggle {
+            background: var(--button-bg);
+            border: none;
+            font-size: 1.3rem;
+            padding: 0.5rem 0.9rem;
+            border-radius: 3rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--button-text);
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: scale(0.96);
+        }
+
+        /* 日期 + 时钟区域 */
+        .datetime-container {
+            background: var(--quote-bg);
+            border-radius: 1.8rem;
+            padding: 1.2rem 1.2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            border: 1px solid var(--border-light);
+        }
+
+        .date {
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .time {
+            font-size: 3rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace, 'Segoe UI';
+            letter-spacing: 2px;
+            color: var(--text-primary);
+            line-height: 1.2;
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .time span {
+            background: linear-gradient(145deg, var(--text-primary), var(--accent-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .seconds {
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: var(--accent-color);
+            background: none;
+            -webkit-background-clip: unset;
+            background-clip: unset;
+            color: var(--accent-color);
+        }
+
+        /* 名言卡片区域 */
+        .quote-wrapper {
+            margin: 1.8rem 0 2rem 0;
+            padding: 1.2rem 0.8rem;
+            background: var(--quote-bg);
+            border-radius: 1.5rem;
+            transition: all 0.2s;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .quote-text {
+            font-size: 1.35rem;
+            line-height: 1.45;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.9rem;
+            quotes: "“" "”" "‘" "’";
+            padding: 0 0.5rem;
+        }
+
+        .quote-text::before {
+            content: "“";
+            font-size: 1.8rem;
+            color: var(--accent-color);
+            margin-right: 0.2rem;
+            vertical-align: middle;
+        }
+
+        .quote-text::after {
+            content: "”";
+            font-size: 1.8rem;
+            color: var(--accent-color);
+            margin-left: 0.2rem;
+            vertical-align: bottom;
+        }
+
+        .quote-author {
+            text-align: right;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-style: normal;
+            border-top: 1px dashed var(--border-light);
+            padding-top: 0.7rem;
+            margin-top: 0.3rem;
+            letter-spacing: 0.5px;
+        }
+
+        .quote-author::before {
+            content: "—— ";
+            opacity: 0.7;
+        }
+
+        /* 按钮组 */
+        .button-group {
+            display: flex;
+            justify-content: center;
+            margin-top: 0.5rem;
+        }
+
+        .refresh-btn {
+            background: var(--button-bg);
+            border: none;
+            padding: 0.8rem 1.8rem;
+            border-radius: 3rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--button-text);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .refresh-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            transform: scale(0.97);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* footer 微小版权 */
+        .footer-note {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.7rem;
+            color: var(--footer-text);
+            opacity: 0.7;
+            border-top: 1px solid var(--border-light);
+            padding-top: 1rem;
+        }
+
+        /* 动效用于名言更新 */
+        @keyframes gentleFade {
+            0% { opacity: 0.5; transform: translateY(5px); }
+            100% { opacity: 1; transform: translateY(0px); }
+        }
+
+        .quote-fade {
+            animation: gentleFade 0.35s ease forwards;
+        }
+
+        /* 响应式布局 */
+        @media (max-width: 520px) {
+            .card {
+                padding: 1.5rem;
+            }
+            .time {
+                font-size: 2.3rem;
+            }
+            .seconds {
+                font-size: 1.4rem;
+            }
+            .quote-text {
+                font-size: 1.2rem;
+            }
+            .title-section h1 {
+                font-size: 1.5rem;
+            }
+            .emoji-icon {
+                font-size: 1.5rem;
+            }
+            .theme-toggle {
+                padding: 0.4rem 0.7rem;
+                font-size: 1rem;
+            }
+        }
+
+        /* 优雅滚动 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-header">
+            <div class="title-section">
+                <span class="emoji-icon">📖✨</span>
+                <h1>时光小笺</h1>
+            </div>
+            <button class="theme-toggle" id="themeToggleBtn" aria-label="切换深色/浅色模式">
+                🌙 深色
+            </button>
+        </div>
+
+        <!-- 日期与实时时钟 -->
+        <div class="datetime-container">
+            <div class="date" id="dateDisplay">加载中...</div>
+            <div class="time" id="timeDisplay">
+                <span>--:--</span>
+                <span class="seconds" id="secondsDisplay">--</span>
+            </div>
+        </div>
+
+        <!-- 名言展示区 -->
+        <div class="quote-wrapper" id="quoteWrapper">
+            <div class="quote-text" id="quoteText">
+                心中有景，花香满径。
+            </div>
+            <div class="quote-author" id="quoteAuthor">
+                佚名
+            </div>
+        </div>
+
+        <!-- 操作区：随机名言按钮 -->
+        <div class="button-group">
+            <button class="refresh-btn" id="refreshQuoteBtn">
+                🔄 换一句灵感
+            </button>
+        </div>
+
+        <div class="footer-note">
+            🌱 每日一言 · 片刻宁静 | 托管于 Gitee
+        </div>
+    </div>
+
+    <script>
+        // ---------- 1. 丰富的中英文名言库 (包含作者) ----------
+        const quotesLibrary = [
+            { text: "生活就像一盒巧克力，你永远不知道你会得到什么。", author: "《阿甘正传》" },
+            { text: "种一棵树最好的时间是十年前，其次是现在。", author: "非洲谚语" },
+            { text: "长风破浪会有时，直挂云帆济沧海。", author: "李白" },
+            { text: "要么你主宰生活，要么让生活主宰你。", author: "吉姆·罗恩" },
+            { text: "行到水穷处，坐看云起时。", author: "王维" },
+            { text: "知人者智，自知者明。胜人者有力，自胜者强。", author: "老子" },
+            { text: "不要等待机会，而要创造机会。", author: "乔治·伯纳德·肖" },
+            { text: "我们总在渴望无法拥有的，却挥霍已经到手的。", author: "莎士比亚" },
+            { text: "勇气不是没有恐惧，而是战胜恐惧。", author: "纳尔逊·曼德拉" },
+            { text: "简单的事情重复做，你就是专家；重复的事情用心做，你就是赢家。", author: "佚名" },
+            { text: "星光不问赶路人，时光不负有心人。", author: "现代箴言" },
+            { text: "世上只有一种英雄主义，就是在认清生活真相之后依然热爱生活。", author: "罗曼·罗兰" },
+            { text: "此心安处是吾乡。", author: "苏轼" },
+            { text: "所谓无底深渊，下去，也是前程万里。", author: "木心" },
+            { text: "梦想还是要有的，万一实现了呢？", author: "马云" },
+            { text: "读书使人充实，讨论使人机智，笔记使人准确。", author: "培根" }
+        ];
+
+        // DOM 元素
+        const quoteTextEl = document.getElementById('quoteText');
+        const quoteAuthorEl = document.getElementById('quoteAuthor');
+        const refreshBtn = document.getElementById('refreshQuoteBtn');
+        const quoteWrapperDiv = document.getElementById('quoteWrapper');
+        const dateDisplayEl = document.getElementById('dateDisplay');
+        const timeDisplaySpan = document.querySelector('#timeDisplay span:first-child');   // 主时:分
+        const secondsDisplaySpan = document.getElementById('secondsDisplay');
+        
+        // 主题切换按钮
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        
+        // ---------- 2. 随机名言逻辑 (带淡入动画) ----------
+        let currentQuoteIndex = -1;
+        
+        function getRandomQuote() {
+            const randomIndex = Math.floor(Math.random() * quotesLibrary.length);
+            return quotesLibrary[randomIndex];
+        }
+        
+        // 更新名言内容并且添加动画类
+        function updateQuoteWithAnimation() {
+            const newQuote = getRandomQuote();
+            quoteTextEl.textContent = newQuote.text;
+            quoteAuthorEl.textContent = newQuote.author;
+            // 添加动画效果
+            quoteWrapperDiv.classList.remove('quote-fade');
+            // 强制重绘以重新触发动画
+            void quoteWrapperDiv.offsetWidth;
+            quoteWrapperDiv.classList.add('quote-fade');
+            // 2秒后移除动画类（可选，保留干净）
+            setTimeout(() => {
+                if (quoteWrapperDiv.classList.contains('quote-fade')) {
+                    quoteWrapperDiv.classList.remove('quote-fade');
+                }
+            }, 400);
+        }
+        
+        // 初始化/手动刷新：调用动画更新
+        function refreshQuote() {
+            updateQuoteWithAnimation();
+        }
+        
+        // ---------- 3. 实时日期和时间模块 (YYYY年MM月DD日 星期X) ----------
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const weekday = weekdays[date.getDay()];
+            return `${year}年${month}月${day}日 ${weekday}`;
+        }
+        
+        function formatTime(date) {
+            let hours = date.getHours();
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            // 12小时制风格更亲切（但保留24小时样式容易读，随意；但显示成上下午也美观）
+            // 这里用24h，但做个优美的样式，加上小时分钟带主体
+            const hoursFormatted = String(hours).padStart(2, '0');
+            return { timeStr: `${hoursFormatted}:${minutes}`, secondsStr: seconds };
+        }
+        
+        function updateDateTime() {
+            const now = new Date();
+            // 更新日期
+            dateDisplayEl.textContent = formatDate(now);
+            // 更新时间 (时:分 和 秒单独)
+            const { timeStr, secondsStr } = formatTime(now);
+            if (timeDisplaySpan) timeDisplaySpan.textContent = timeStr;
+            if (secondsDisplaySpan) secondsDisplaySpan.textContent = secondsStr;
+        }
+        
+        // 启动时钟 (每秒更新)
+        let timerInterval = null;
+        function startClock() {
+            if (timerInterval) clearInterval(timerInterval);
+            updateDateTime(); // 立刻渲染
+            timerInterval = setInterval(() => {
+                updateDateTime();
+            }, 1000);
+        }
+        
+        // ---------- 4. 深色/浅色模式切换 + 按钮文案适配 ----------
+        function initTheme() {
+            // 优先检测本地存储或系统偏好（可选优雅存储）
+            const savedTheme = localStorage.getItem('theme_preference');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.body.classList.add('dark');
+                updateThemeButtonText(true);
+            } else {
+                document.body.classList.remove('dark');
+                updateThemeButtonText(false);
+            }
+        }
+        
+        function updateThemeButtonText(isDark) {
+            if (isDark) {
+                themeToggleBtn.innerHTML = '☀️ 浅色';
+            } else {
+                themeToggleBtn.innerHTML = '🌙 深色';
+            }
+        }
+        
+        function toggleTheme() {
+            const isDarkMode = document.body.classList.contains('dark');
+            if (isDarkMode) {
+                document.body.classList.remove('dark');
+                localStorage.setItem('theme_preference', 'light');
+                updateThemeButtonText(false);
+            } else {
+                document.body.classList.add('dark');
+                localStorage.setItem('theme_preference', 'dark');
+                updateThemeButtonText(true);
+            }
+        }
+        
+        // 可选：针对名言动画预置第一条内容（初次加载时随机展示）
+        function setRandomQuoteOnLoad() {
+            const firstQuote = getRandomQuote();
+            quoteTextEl.textContent = firstQuote.text;
+            quoteAuthorEl.textContent = firstQuote.author;
+            // 不加动画避免一进来突兀，直接显示即可
+            quoteWrapperDiv.classList.remove('quote-fade');
+        }
+        
+        // ----- 5. 附加体验：监听系统主题变化（可选, 改善体验）-----
+        function watchSystemColorScheme() {
+            if (!window.matchMedia) return;
+            const darkModeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+            const handleChange = (e) => {
+                // 只有当 localStorage 没有存储偏好时才自动跟随系统
+                if (!localStorage.getItem('theme_preference')) {
+                    if (e.matches) {
+                        document.body.classList.add('dark');
+                        updateThemeButtonText(true);
+                    } else {
+                        document.body.classList.remove('dark');
+                        updateThemeButtonText(false);
+                    }
+                }
+            };
+            // 兼容旧版浏览器
+            if (darkModeMedia.addEventListener) {
+                darkModeMedia.addEventListener('change', handleChange);
+            } else if (darkModeMedia.addListener) {
+                darkModeMedia.addListener(handleChange);
+            }
+        }
+        
+        // ---------- 6. 初始化所有事件与功能 ----------
+        function init() {
+            // 随机设置一句名言 (不带动画初始)
+            const initQuote = quotesLibrary[Math.floor(Math.random() * quotesLibrary.length)];
+            quoteTextEl.textContent = initQuote.text;
+            quoteAuthorEl.textContent = initQuote.author;
+            // 启动实时时钟
+            startClock();
+            // 主题初始化
+            initTheme();
+            watchSystemColorScheme();
+            // 绑定刷新名言事件
+            refreshBtn.addEventListener('click', () => {
+                refreshQuote();
+                // 增加微小触感(振动可选，但可有可无)
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate(20);
+                }
+            });
+            // 绑定主题切换事件
+            themeToggleBtn.addEventListener('click', toggleTheme);
+            // 保证窗口焦点时时钟保持准确 (无额外开销，setInterval足够了)
+            // 为防止页面隐藏时频繁更新浪费，但不是大问题，保留原样
+            // 增加可访问性: 名言区域首次加载加上温柔的样式
+        }
+        
+        // 页面完全加载后启动
+        window.addEventListener('DOMContentLoaded', init);
+        
+        // 清理计时器，但不是必须，但对于单页APP习惯保留
+        window.addEventListener('beforeunload', () => {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        });
+        
+        // 补充：动态调整秒的数字样式无bug，让时钟区域更加细腻
+        // 额外让计时器更新时不会有排版抖动
+    </script>
+</body>
+</html>
